@@ -1,0 +1,24 @@
+{
+  "name": "react-dev-cli",
+  "version": "1.0.1",
+  "description": "To use development react components by myself",
+  "main": "index.js",
+  "repository": "https://github.com/YingQQQ/react-dev-cli.git",
+  "author": "YingQQQ <yingqi2008win@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/index"
+  },
+  "bin": {
+    "createComponent": "./bin/index"
+  },
+  "dependencies": {
+    "chalk": "^2.4.1",
+    "commander": "^2.19.0",
+    "cross-spawn": "^6.0.5",
+    "fs-extra": "^7.0.1",
+    "semver": "^5.6.0",
+    "validate-npm-package-name": "^3.0.0"
+  }
+}
