@@ -15,9 +15,6 @@
   "lint-staged": {
     "*.{js,md,css,html}": [
       "git add"
-    ],
-    "yarn.lock": [
-      "git rm --cached"
     ]
   }
 }
