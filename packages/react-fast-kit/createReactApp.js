@@ -4,12 +4,16 @@ const commander = require('commander');
 const execSync = require('child_process').execSync;
 const fs = require('fs-extra');
 const os = require('os');
+const dns = require('dns');
 const path = require('path');
 const semver = require('semver');
 const spawn = require('cross-spawn');
+const hyperquest = require('hyperquest');
+const tmp = require('tmp');
+const unpack = require('tar-pack').unpack;
 const validateProjectName = require('validate-npm-package-name');
 
-const packageJson = require('../package.json');
+const packageJson = require('./package.json');
 
 let projectName;
 
@@ -45,8 +49,6 @@ if (typeof projectName === 'undefined') {
   process.exit(1);
 }
 
-console.log(program.typescript);
-console.log(program.useNpm);
 // createComponent(
 //   projectName,
 //   program.verbose,
@@ -119,6 +121,7 @@ function createComponent(
           `Please update to Node 6 or higher for a better, fully supported experience.\n`
       )
     );
+    version = 'react-scripts@0.9.x';
   }
 
   if (!useYarn) {
@@ -133,15 +136,14 @@ function createComponent(
           )
         );
       }
+      version = 'react-scripts@0.9.x';
     }
   } else if (usePnp) {
-    const {hasMinYarnPnp, yarnVersion} = checkYarnVersion();
+    const { hasMinYarnPnp, yarnVersion } = checkYarnVersion();
     if (!hasMinYarnPnp) {
       if (yarnVersion) {
         chalk.yellow(
-          `You are using Yarn ${
-            yarnVersion
-          } together with the --use-pnp flag, but Plug'n'Play is only supported starting from the 1.12 release.\n\n` +
+          `You are using Yarn ${yarnVersion} together with the --use-pnp flag, but Plug'n'Play is only supported starting from the 1.12 release.\n\n` +
             `Please update to Yarn 1.12 or higher for a better, fully supported experience.\n`
         );
       }
@@ -156,6 +158,290 @@ function createComponent(
       path.join(root, 'yarn.lock')
     );
   }
+
+  run(
+    root,
+    appName,
+    version,
+    verbose,
+    originalDirectory,
+    template,
+    useYarn,
+    usePnp,
+    useTypescript
+  );
+}
+
+function run(
+  root,
+  appName,
+  version,
+  verbose,
+  originalDirectory,
+  template,
+  useYarn,
+  usePnp,
+  useTypescript
+) {
+  // 安装依赖包
+  const packageToInstall = getInstallPackage(version, originalDirectory);
+
+  // 添加开发依赖
+  const allDependencies = ['react', 'react-dom', packageToInstall];
+
+  // 如果使用typescript 则在依赖中加入相应的TS开发依赖
+  if (useTypescript) {
+    allDependencies.push(
+      '@types/node',
+      '@types/react',
+      '@types/react-dom',
+      '@types/jest',
+      'typescript'
+    );
+  }
+
+  console.log(
+    chalk.green('Installing packages. This might take a couple of minutes.')
+  );
+
+  getPackageName(packageToInstall)
+    .then(packageName =>
+      checkIfOnline(useYarn).then(isOnline => ({
+        isOnline,
+        packageName
+      }))
+    )
+    .then(({ isOnline, packageName }) => {
+      console.log(
+        `Installing ${chalk.cyan('react')}, ${chalk.cyan(
+          'react-dom'
+        )}, and ${chalk.cyan(packageName)}...`
+      );
+      console.log();
+
+      return install(
+        root,
+        useYarn,
+        usePnp,
+        allDependencies,
+        verbose,
+        isOnline
+      ).then(() => packageName);
+    })
+    .then(async packageName => {
+      checkNodeVersion(packageName);
+      setCaretRangeForRuntimeDeps(packageName);
+
+      const pnpPath = path.resolve(process.cwd(), '.pnp.js');
+
+      const nodeArgs = fs.existsSync(pnpPath) ? ['--require', pnpPath] : [];
+
+      await executeNodeScript(
+        {
+          cwd: process.cwd(),
+          args: nodeArgs
+        },
+        [root, appName, verbose, originalDirectory, template],
+        `
+        var init = require('${packageName}/scripts/init.js');
+        init.apply(null, JSON.parse(process.argv[1]));
+        `
+      );
+      if (version === 'react-scripts@0.9.x') {
+        console.log(
+          chalk.yellow(
+            `\nNote: the project was bootstrapped with an old unsupported version of tools.\n` +
+              `Please update to Node >=6 and npm >=3 to get supported tools in new projects.\n`
+          )
+        );
+      }
+    })
+    .catch(reason => {
+      console.log();
+      console.log('Aborting installation.');
+      if (reason.command) {
+        console.log(`  ${chalk.cyan(reason.command)} has failed.`);
+      } else {
+        console.log(chalk.red('Unexpected error. Please report it as a bug:'));
+        console.log(reason);
+      }
+      console.log();
+
+      // On 'exit' we will delete these files from target directory.
+      const knownGeneratedFiles = ['package.json', 'yarn.lock', 'node_modules'];
+      const currentFiles = fs.readdirSync(path.join(root));
+      currentFiles.forEach(file => {
+        knownGeneratedFiles.forEach(fileToMatch => {
+          // This remove all of knownGeneratedFiles.
+          if (file === fileToMatch) {
+            console.log(`Deleting generated file... ${chalk.cyan(file)}`);
+            fs.removeSync(path.join(root, file));
+          }
+        });
+      });
+      const remainingFiles = fs.readdirSync(path.join(root));
+      if (!remainingFiles.length) {
+        // Delete target folder if empty
+        console.log(
+          `Deleting ${chalk.cyan(`${appName}/`)} from ${chalk.cyan(
+            path.resolve(root, '..')
+          )}`
+        );
+        process.chdir(path.resolve(root, '..'));
+        fs.removeSync(path.join(root));
+      }
+      console.log('Done.');
+      process.exit(1);
+    });
+}
+
+function install(root, useYarn, usePnp, dependencies, verbose, isOnline) {}
+
+function getPackageName(installPackage) {
+  if (installPackage.match(/^.+\.(tgz|tar\.gz)$/)) {
+    return getTemporaryDirectory()
+      .then(obj => {
+        let stream;
+        if (/^http/.test(installPackage)) {
+          stream = hyperquest(installPackage);
+        } else {
+          stream = fs.createReadStream(installPackage);
+        }
+        // 提取出数据流
+        return extractStream(stream, obj.tmpdir).then(() => obj);
+      })
+      .then(obj => {
+        const packageName = require(path.join(obj.tmpdir, 'package.json')).name;
+        obj.cleanUp();
+        return packageName;
+      })
+      .catch(err => {
+        console.log(
+          `Could not extract the package name from the archive: ${err.message}`
+        );
+
+        // 描述正常包的名称
+        const assumedProjectName = installPackage.match(
+          /^.+\/(.+?)(?:-\d+.+)?\.(tgz|tar\.gz)$/
+        )[1];
+        console.log(
+          `Based on the filename, assuming it is "${chalk.cyan(
+            assumedProjectName
+          )}"`
+        );
+        return Promise.resolve(assumedProjectName);
+      });
+  } else if (installPackage.indexOf('git+') === 0) {
+    // 如果是git上面拉取的包
+    // git+https://github.com/mycompany/react-scripts.git
+    // git+ssh://github.com/mycompany/react-scripts.git#v1.2.3
+    return Promise.resolve(installPackage.match(/([^/]+)\.git(#.*)?$/)[1]);
+  } else if (installPackage.match(/.+@/)) {
+    // 如果匹配@,则剔除@符号
+    return Promise.resolve(
+      installPackage.charAt(0) + installPackage.substr(1).split('@')[0]
+    );
+  } else if (installPackage.match(/^file:/)) {
+    const installPackagePath = installPackage.match(/^file:(.*)?$/)[1];
+    const installPackageJson = require(path.join(
+      installPackagePath,
+      'package.json'
+    ));
+    return Promise.resolve(installPackageJson.name);
+  }
+  return Promise.resolve(installPackage);
+}
+
+// 生成临时文件
+function getTemporaryDirectory() {
+  return new Promise((resolve, reject) => {
+    // Async创建目录, unsafeCleanup确保每次进入目录都会删除残余文件
+    tmp.dir({ unsafeCleanup: true }, (err, tmpdir, callback) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve({
+          tmpdir,
+          cleanUp: () => {
+            try {
+              // 手动删除
+              callback();
+            } catch (error) {
+              // ingnore
+            }
+          }
+        });
+      }
+    });
+  });
+}
+
+function extractStream(stream, path) {
+  return new Promise((resolve, reject) => {
+    stream.pipe(
+      unpack(path, err => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(path);
+        }
+      })
+    );
+  });
+}
+
+function checkIfOnline(useYarn) {
+  if (!useYarn) {
+    return Promise.resolve(true);
+  }
+  return new Promise(resolve => {
+    dns.lookup('registry.yarnpkg.com', err => {
+      // 检查是否使用代理
+      let proxy = getProxy();
+      if (err !== null && proxy) {
+        dns.lookup(url.parse(proxy).hostname, proxyErr => {
+          resolve(proxyErr == null);
+        });
+      } else {
+        resolve(err == null);
+      }
+    });
+  });
+}
+
+function getProxy() {
+  if (process.env.https_proxy) {
+    return process.env.https_proxy;
+  } else {
+    // 检查.npmrc有没有设置代理
+    const httpsProxy = execSync('npm config get https-proxy')
+      .toString()
+      .trim();
+    return httpsProxy || undefined;
+  }
+}
+
+function getInstallPackage(version, originalDirectory) {
+  let packageToInstall = 'react-srcipt';
+
+  const validSemver = semver.valid(version);
+
+  if (validSemver) {
+    packageToInstall = `@${validSemver}`;
+  } else if (version) {
+    if (version[0] === '@' && version.indexOf('/') === -1) {
+      packageToInstall += version;
+    } else if (version.match(/^file:/)) {
+      packageToInstall = `file:${path.resolve(
+        originalDirectory,
+        version.match(/^file:(.*)?$/)[1] // 尽可能多的去匹配, 返回一个数组
+      )}`;
+    }
+  } else {
+    // for tar.gz or alternative paths
+    packageToInstall = version;
+  }
+  return packageToInstall;
 }
 
 // 检查文件名称是否正常
@@ -364,5 +650,6 @@ function checkYarnVersion() {
   };
 }
 
+console.log(checkYarnVersion());
 
 console.log(chalk.yellow('end'));
