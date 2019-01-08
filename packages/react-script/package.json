@@ -1,0 +1,8 @@
+{
+  "name": "react-script",
+  "version": "1.0.0",
+  "description": "react development base kit",
+  "author": "Y",
+  "license": "MIT",
+  "private": true
+}

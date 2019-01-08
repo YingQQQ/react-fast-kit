@@ -1,10 +1,13 @@
 #!/usr/bin/env node
+
+'use strict';
 const chalk = require('chalk');
 const commander = require('commander');
 const execSync = require('child_process').execSync;
 const fs = require('fs-extra');
 const os = require('os');
 const dns = require('dns');
+const url = require('url');
 const path = require('path');
 const semver = require('semver');
 const spawn = require('cross-spawn');
@@ -29,6 +32,10 @@ const program = new commander.Command(packageJson.name)
   .option('--use-npm', 'Use npm to install packages')
   .option('--use-pnp', 'Use yarn to install packages')
   .option('--typescript', 'install typescript dependencies packages')
+  .option(
+    '--select-version <alternative-package>',
+    'use a non-standard version of react-scripts'
+  )
   .allowUnknownOption()
   .parse(process.argv);
 
@@ -49,17 +56,23 @@ if (typeof projectName === 'undefined') {
   process.exit(1);
 }
 
-// createComponent(
-//   projectName,
-//   program.verbose,
-//   program.version,
-//   program.useNpm,
-//   program.usePnp,
-//   program.typescript,
-//   program.template
-// );
+const errorLogFilePatterns = [
+  'npm-debug.log',
+  'yarn-error.log',
+  'yarn-debug.log'
+];
 
-function createComponent(
+createDirectory(
+  projectName,
+  program.verbose,
+  program.selectVersion,
+  program.useNpm,
+  program.usePnp,
+  program.typescript,
+  program.template
+);
+
+function createDirectory(
   name,
   verbose,
   version,
@@ -77,7 +90,7 @@ function createComponent(
   checkAppName(appName);
 
   // 如果目录结构不存在，则创建它，如果目录存在，则不进行创建，类似mkdir -p。 这是同步行为
-  // fs.ensureDirSync(name);
+  fs.ensureDirSync(name);
 
   if (!isSafeToCreateProjectIn(root, name)) {
     process.exit(1);
@@ -154,11 +167,10 @@ function createComponent(
 
   if (useYarn) {
     fs.copySync(
-      require.resolve('../yarn.lock.cached'),
+      require.resolve('./yarn.lock.cached'),
       path.join(root, 'yarn.lock')
     );
   }
-
   run(
     root,
     appName,
@@ -230,10 +242,11 @@ function run(
     })
     .then(async packageName => {
       checkNodeVersion(packageName);
+      // 写入依赖
       setCaretRangeForRuntimeDeps(packageName);
 
+      // 如果有pnp的配置路径
       const pnpPath = path.resolve(process.cwd(), '.pnp.js');
-
       const nodeArgs = fs.existsSync(pnpPath) ? ['--require', pnpPath] : [];
 
       await executeNodeScript(
@@ -295,7 +308,171 @@ function run(
     });
 }
 
-function install(root, useYarn, usePnp, dependencies, verbose, isOnline) {}
+function executeNodeScript({ cwd, args }, data, source) {
+  return new Promise((resolve, reject) => {
+    // `-e`, `--eval "script"`
+    // 把跟随的参数作为 JavaScript 来执行。 在 REPL 中预定义的模块也可以在 script 中使用。
+    const child = spawn(
+      process.execPath,
+      [...args, '-e', source, '--', JSON.parse(data)],
+      {
+        cwd,
+        stdio: 'inherit'
+      }
+    );
+    // 监听子进程
+    child.on('close', code => {
+      if (code !== 0) {
+        reject({
+          command: `node ${args.join(' ')}`
+        });
+        return;
+      }
+      resolve();
+    });
+  });
+}
+
+function setCaretRangeForRuntimeDeps(packageName) {
+  const packageJsonPath = path.join(process.cwd(), 'package.json');
+  const packageJson = require(packageJsonPath);
+
+  // 没有依赖则退出进程
+  if (typeof packageJson.dependencies === 'undefined') {
+    console.error(chalk.red('Missing dependencies in package.json'));
+    process.exit(1);
+  }
+
+  // 依赖中没有匹配的包则退出进程
+  const packageVersion = packageJson.dependencies[packageName];
+  if (typeof packageVersion === 'undefined') {
+    console.error(chalk.red(`Unable to find ${packageName} in package.json`));
+    process.exit(1);
+  }
+
+  // 判断有没有react, react-dom包没有的话写入package.json文件里面
+  makeCaretRange(packageJson.dependencies, 'react');
+  makeCaretRange(packageJson.dependencies, 'react-dom');
+  fs.writeFileSync(
+    packageJsonPath,
+    JSON.stringify(packageJson, null, 2) + os.EOL
+  );
+}
+
+function makeCaretRange(dependencies, packageName) {
+  const version = dependencies[packageName];
+
+  if (typeof version === 'undefined') {
+    console.error(chalk.red(`Missing ${name} dependency in package.json`));
+    process.exit(1);
+  }
+
+  // 指定的 MAJOR 版本号下, 所有更新的版本
+  // ^2.2.1 => 匹配 2.2.3, 2.3.0 不匹配 1.0.3, 3.0.1
+  let patchedVersion = `^${version}`;
+
+  // 不是有效的版本范围
+  if (!semver.validRange(patchedVersion)) {
+    console.error(
+      `Unable to patch ${name} dependency version because version ${chalk.red(
+        version
+      )} will become invalid ${chalk.red(patchedVersion)}`
+    );
+    patchedVersion = version;
+  }
+
+  dependencies[name] = patchedVersion;
+}
+
+function checkNodeVersion(packageName) {
+  const packageJsonPath = path.resolve(
+    process.cwd(),
+    'node_modules',
+    packageName,
+    'package.json'
+  );
+
+  if (!fs.existsSync(packageJsonPath)) {
+    return;
+  }
+
+  // 引入安装包的json
+  const packageJson = require(packageJsonPath);
+
+  if (!packageJson.engines || !packageJson.engines.node) {
+    return;
+  }
+
+  // 然后检查node版本是不是大于最低版本
+  if (!semver.satisfies(process.version, packageJson.engines.node)) {
+    console.error(
+      chalk.red(
+        'You are running Node %s.\n' +
+          'Create React App requires Node %s or higher. \n' +
+          'Please update your version of Node.'
+      ),
+      process.version,
+      packageJson.engines.node
+    );
+    process.exit(1);
+  }
+}
+
+function install(root, useYarn, usePnp, dependencies, verbose, isOnline) {
+  return new Promise((resolve, reject) => {
+    let command;
+    let args;
+    if (useYarn) {
+      command = 'yarnpkg';
+      args = ['add', '--exact']; // excat 准确的版本号
+      if (!isOnline) {
+        args.push('--offline');
+        console.log(chalk.yellow('You appear to be offline.'));
+        console.log(chalk.yellow('Falling back to the local Yarn cache.'));
+        console.log();
+      }
+      if (usePnp) {
+        args.push('--enable-pnp');
+      }
+      args.concat(dependencies);
+
+      args.push('--cwd');
+      args.push(root);
+    } else {
+      command = 'npm';
+      args = [
+        'install',
+        '--save',
+        '--save-exact',
+        '--loglevel',
+        'error'
+      ].concat(dependencies);
+      if (usePnp) {
+        console.log(chalk.yellow("NPM doesn't support PnP."));
+        console.log(chalk.yellow('Falling back to the regular installs.'));
+        console.log();
+      }
+    }
+
+    if (verbose) {
+      args.push('--verbose');
+    }
+
+    // 通过调用子进程来安装依赖包
+    const child = spawn(command, args, {
+      stdio: 'inherit'
+    });
+    child.on('close', code => {
+      if (code !== 0) {
+        reject({
+          command: `${command} ${args.join(' ')}`
+        });
+        return;
+      }
+      resolve();
+    });
+  });
+}
 
 function getPackageName(installPackage) {
   if (installPackage.match(/^.+\.(tgz|tar\.gz)$/)) {
@@ -426,6 +603,7 @@ function getInstallPackage(version, originalDirectory) {
 
   const validSemver = semver.valid(version);
 
+  console.log(typeof version);
   if (validSemver) {
     packageToInstall = `@${validSemver}`;
   } else if (version) {
@@ -436,10 +614,10 @@ function getInstallPackage(version, originalDirectory) {
         originalDirectory,
         version.match(/^file:(.*)?$/)[1] // 尽可能多的去匹配, 返回一个数组
       )}`;
+    } else {
+      // for tar.gz or alternative paths
+      packageToInstall = version;
     }
-  } else {
-    // for tar.gz or alternative paths
-    packageToInstall = version;
   }
   return packageToInstall;
 }
@@ -467,12 +645,6 @@ function printValidationResults(results) {
   }
 }
 
-const errorLogFilePatterns = [
-  'npm-debug.log',
-  'yarn-error.log',
-  'yarn-debug.log'
-];
-
 function isSafeToCreateProjectIn(root, name) {
   const validFiles = [
     '.DS_Store',
@@ -492,6 +664,9 @@ function isSafeToCreateProjectIn(root, name) {
     '.gitlab-ci.yml',
     '.gitattributes'
   ];
+
+  console.log(root);
+
   // 检查文件是不是有冲突 返回一个数组
   // 1.排除validFiles的文件
   // 2.排除后缀是msl的文件
@@ -500,8 +675,8 @@ function isSafeToCreateProjectIn(root, name) {
     .readdirSync(root)
     .filter(file => !validFiles.includes(file))
     .filter(file => !/\.iml$/.test(file))
-    .filter(file =>
-      errorLogFilePatterns.some(pattern => file.indexOf(pattern) === 0)
+    .filter(
+      file => !errorLogFilePatterns.some(pattern => file.indexOf(pattern) === 0)
     );
 
   // 如果有冲突文件
@@ -584,7 +759,7 @@ function checkThatNpmCanReadCwd() {
       `Could not start an npm process in the right directory.\n\n` +
         `The current directory is: ${chalk.bold(cwd)}\n` +
         `However, a newly started npm process runs in: ${chalk.bold(
-          npmCWD
+          npmCwd
         )}\n\n` +
         `This is probably caused by a misconfigured system terminal shell.`
     )
@@ -649,7 +824,5 @@ function checkYarnVersion() {
     yarnVersion
   };
 }
-
-console.log(checkYarnVersion());
 
 console.log(chalk.yellow('end'));
