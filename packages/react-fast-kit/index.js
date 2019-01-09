@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+'use strict';
+
 const chalk = require('chalk');
 
 const currentNodeVersion = process.versions.node;

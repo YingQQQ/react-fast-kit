@@ -230,7 +230,7 @@ function run(
         )}, and ${chalk.cyan(packageName)}...`
       );
       console.log();
-
+      
       return install(
         root,
         useYarn,
@@ -280,12 +280,11 @@ function run(
       }
       console.log();
 
-      // On 'exit' we will delete these files from target directory.
+      // 退出之前删除安装的文件
       const knownGeneratedFiles = ['package.json', 'yarn.lock', 'node_modules'];
       const currentFiles = fs.readdirSync(path.join(root));
       currentFiles.forEach(file => {
         knownGeneratedFiles.forEach(fileToMatch => {
-          // This remove all of knownGeneratedFiles.
           if (file === fileToMatch) {
             console.log(`Deleting generated file... ${chalk.cyan(file)}`);
             fs.removeSync(path.join(root, file));
@@ -294,7 +293,7 @@ function run(
       });
       const remainingFiles = fs.readdirSync(path.join(root));
       if (!remainingFiles.length) {
-        // Delete target folder if empty
+        // 删除文件夹
         console.log(
           `Deleting ${chalk.cyan(`${appName}/`)} from ${chalk.cyan(
             path.resolve(root, '..')
@@ -314,7 +313,7 @@ function executeNodeScript({ cwd, args }, data, source) {
     // 把跟随的参数作为 JavaScript 来执行。 在 REPL 中预定义的模块也可以在 script 中使用。
     const child = spawn(
       process.execPath,
-      [...args, '-e', source, '--', JSON.parse(data)],
+      [...args, '-e', source, '--', JSON.stringify(data)],
       {
         cwd,
         stdio: 'inherit'
@@ -363,7 +362,7 @@ function makeCaretRange(dependencies, packageName) {
   const version = dependencies[packageName];
 
   if (typeof version === 'undefined') {
-    console.error(chalk.red(`Missing ${name} dependency in package.json`));
+    console.error(chalk.red(`Missing ${packageName} dependency in package.json`));
     process.exit(1);
   }
 
@@ -374,14 +373,14 @@ function makeCaretRange(dependencies, packageName) {
   // 不是有效的版本范围
   if (!semver.validRange(patchedVersion)) {
     console.error(
-      `Unable to patch ${name} dependency version because version ${chalk.red(
+      `Unable to patch ${packageName} dependency version because version ${chalk.red(
         version
       )} will become invalid ${chalk.red(patchedVersion)}`
     );
     patchedVersion = version;
   }
 
-  dependencies[name] = patchedVersion;
+  dependencies[packageName] = patchedVersion;
 }
 
 function checkNodeVersion(packageName) {
@@ -434,7 +433,8 @@ function install(root, useYarn, usePnp, dependencies, verbose, isOnline) {
       if (usePnp) {
         args.push('--enable-pnp');
       }
-      args.concat(dependencies);
+      
+      args = args.concat(dependencies);
 
       args.push('--cwd');
       args.push(root);
@@ -480,8 +480,10 @@ function getPackageName(installPackage) {
       .then(obj => {
         let stream;
         if (/^http/.test(installPackage)) {
+          console.log('1');
           stream = hyperquest(installPackage);
         } else {
+          console.log('2');
           stream = fs.createReadStream(installPackage);
         }
         // 提取出数据流
@@ -599,7 +601,7 @@ function getProxy() {
 }
 
 function getInstallPackage(version, originalDirectory) {
-  let packageToInstall = 'react-srcipt';
+  let packageToInstall = 'react-script';
 
   const validSemver = semver.valid(version);
 
