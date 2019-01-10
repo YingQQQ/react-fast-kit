@@ -1,0 +1,10 @@
+{
+  "name": "react-dev-utils",
+  "version": "1.0.0",
+  "description": "some react dev utils",
+  "author": "Y",
+  "private": true,
+  "devDependencies": {
+    "cross-spawn": "^6.0.5"
+  }
+}
