@@ -17,6 +17,7 @@ const fs = require('fs-extra');
 const os = require('os');
 const path = require('path');
 const spawn = require('cross-spawn');
+const verifyTypeScriptSetup = require('./utils/verifyTypeScriptSetup');
 
 const defaultBrowsers = [
   '>0.2%',
@@ -34,6 +35,20 @@ function isReactInstalled(appPackage) {
   )
 }
 
+function isInGitRepository() {
+  
+}
+
+function tryGitInit(appPath) {
+  let didInit = false;
+
+  execSync('git --version', {
+    stdio: 'ignore'
+  })
+  if (isInGitRepository() || isInMercurialRepository()) {
+    return false;
+  }
+}
 
 // 浅析 NodeJs 的几种文件路径
 // https://github.com/imsobear/blog/issues/48

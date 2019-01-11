@@ -11,4 +11,10 @@ const appDirectory = fs.realpathSync(process.cwd());
 const resolveApp = relativePath => path.resolve(appDirectory, relativePath);
 const appNodeModules = resolveApp('node_modules');
 
-console.log(chalk.green(appNodeModules));
+const ts = require(
+  resolve.sync('typescript', {
+    basedir: appNodeModules
+  })
+)
+
+console.log(ts.ModuleKind);
