@@ -8,10 +8,14 @@
   "devDependencies": {
     "chalk": "^2.4.2",
     "cross-spawn": "^6.0.5",
+    "dotenv": "^6.2.0",
+    "dotenv-expand": "^4.2.0",
     "fs-extra": "^7.0.1",
     "globby": "^8.0.2",
     "immer": "^1.10.0",
     "resolve": "^1.9.0",
-    "typescript": "^3.2.2"
+    "typescript": "^3.2.2",
+    "webpack": "^4.28.4",
+    "webpack-dev-server": "^3.1.14"
   }
 }

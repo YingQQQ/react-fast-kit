@@ -63,6 +63,7 @@ const resloveModule = (resolveFn, filePath) => {
 
 
 module.exports = {
+  dotenv: resolveApp('.env'),
   appTsConfig: resolveApp('tsconfig.json'),
   appSrc: resolveApp('src'),
   yarnLockFile: resolveApp('yarn.lock'),
