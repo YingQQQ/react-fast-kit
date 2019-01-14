@@ -601,7 +601,7 @@ function getProxy() {
 }
 
 function getInstallPackage(version, originalDirectory) {
-  let packageToInstall = 'react-script';
+  let packageToInstall = 'react-scripts';
 
   const validSemver = semver.valid(version);
 

@@ -29,23 +29,55 @@ const defaultBrowsers = [
 function isReactInstalled(appPackage) {
   const dependencies = appPackage.dependencies || {};
 
-  return(
+  return (
     typeof dependencies.react !== 'undefined' &&
     typeof dependencies['react-dom'] !== 'undefined'
-  )
+  );
 }
 
 function isInGitRepository() {
-  
+  try {
+    // 当前工作目录位于存储库的工作树内时，打印“true”，否则为“false”。
+    execSync('git rev-parse --is-inside-work-tree', {
+      stdio: 'ignore'
+    });
+    return true;
+  } catch (error) {
+    return false;
+  }
 }
 
 function tryGitInit(appPath) {
   let didInit = false;
+  try {
+    execSync('git --version', {
+      stdio: 'ignore'
+    });
+    if (isInGitRepository()) {
+      return false;
+    }
+  
+    execSync('git init', {
+      stdio: 'ignore'
+    });
+    didInit = true;
+    execSync('git add -A', {
+      stdio: 'ignore'
+    })
 
-  execSync('git --version', {
-    stdio: 'ignore'
-  })
-  if (isInGitRepository() || isInMercurialRepository()) {
+    execSync('git commit -m "Initial commit from Create React App"', {
+      stdio: 'ignore',
+    });
+    return true;
+  } catch (error) {
+    if (didInit) {
+      // 如果成功初始化但是却无法提交,有可能没有设置用户名
+      try {
+        fs.removeSync(path.join(appPath, '.git'));
+      } catch (removeErr) {
+        // Ignore.
+      }
+    }
     return false;
   }
 }
@@ -168,18 +200,14 @@ module.exports = function init(
     console.log(`Installing react and react-dom using ${command}...`);
     console.log();
 
-    const proc = spawn.sync(
-      command,
-      args,
-      {
-        stdio: 'inherit'
-      }
-    )
-    
+    const proc = spawn.sync(command, args, {
+      stdio: 'inherit'
+    });
+
     // 进程退出码只有是0的时候没有异常
     if (proc.status !== 0) {
-      console.error(`${command} ${args.join(' ')} failed`)
-      return
+      console.error(`${command} ${args.join(' ')} failed`);
+      return;
     }
   }
 
@@ -199,46 +227,46 @@ module.exports = function init(
     cdPath = appPath;
   }
 
-    // Change displayed command to yarn instead of yarnpkg
-    const displayedCommand = useYarn ? 'yarn' : 'npm';
+  // Change displayed command to yarn instead of yarnpkg
+  const displayedCommand = useYarn ? 'yarn' : 'npm';
 
-    console.log();
-    console.log(`Success! Created ${appName} at ${appPath}`);
-    console.log('Inside that directory, you can run several commands:');
-    console.log();
-    console.log(chalk.cyan(`  ${displayedCommand} start`));
-    console.log('    Starts the development server.');
+  console.log();
+  console.log(`Success! Created ${appName} at ${appPath}`);
+  console.log('Inside that directory, you can run several commands:');
+  console.log();
+  console.log(chalk.cyan(`  ${displayedCommand} start`));
+  console.log('    Starts the development server.');
+  console.log();
+  console.log(
+    chalk.cyan(`  ${displayedCommand} ${useYarn ? '' : 'run '}build`)
+  );
+  console.log('    Bundles the app into static files for production.');
+  console.log();
+  console.log(chalk.cyan(`  ${displayedCommand} test`));
+  console.log('    Starts the test runner.');
+  console.log();
+  console.log(
+    chalk.cyan(`  ${displayedCommand} ${useYarn ? '' : 'run '}eject`)
+  );
+  console.log(
+    '    Removes this tool and copies build dependencies, configuration files'
+  );
+  console.log(
+    '    and scripts into the app directory. If you do this, you can’t go back!'
+  );
+  console.log();
+  console.log('We suggest that you begin by typing:');
+  console.log();
+  console.log(chalk.cyan('  cd'), cdPath);
+  console.log(`  ${chalk.cyan(`${displayedCommand} start`)}`);
+  if (readmeExists) {
     console.log();
     console.log(
-      chalk.cyan(`  ${displayedCommand} ${useYarn ? '' : 'run '}build`)
+      chalk.yellow(
+        'You had a `README.md` file, we renamed it to `README.old.md`'
+      )
     );
-    console.log('    Bundles the app into static files for production.');
-    console.log();
-    console.log(chalk.cyan(`  ${displayedCommand} test`));
-    console.log('    Starts the test runner.');
-    console.log();
-    console.log(
-      chalk.cyan(`  ${displayedCommand} ${useYarn ? '' : 'run '}eject`)
-    );
-    console.log(
-      '    Removes this tool and copies build dependencies, configuration files'
-    );
-    console.log(
-      '    and scripts into the app directory. If you do this, you can’t go back!'
-    );
-    console.log();
-    console.log('We suggest that you begin by typing:');
-    console.log();
-    console.log(chalk.cyan('  cd'), cdPath);
-    console.log(`  ${chalk.cyan(`${displayedCommand} start`)}`);
-    if (readmeExists) {
-      console.log();
-      console.log(
-        chalk.yellow(
-          'You had a `README.md` file, we renamed it to `README.old.md`'
-        )
-      );
-    }
-    console.log();
-    console.log('Happy hacking!');
+  }
+  console.log();
+  console.log('Happy hacking!');
 };
