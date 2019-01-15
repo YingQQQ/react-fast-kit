@@ -1,20 +1,19 @@
-'use strict';
-
-const chalk = require('chalk');
-const path = require('path');
-const fs = require('fs');
-const url = require('url');
-const resolve = require('resolve');
-
-
-const appDirectory = fs.realpathSync(process.cwd());
-const resolveApp = relativePath => path.resolve(appDirectory, relativePath);
-const appNodeModules = resolveApp('node_modules');
-
-const ts = require(
-  resolve.sync('typescript', {
-    basedir: appNodeModules
-  })
-)
-
-console.log(ts.ModuleKind);
+'use strict'
+// See https://github.com/facebook/create-react-app/issues/1795 for reasons why.
+function clearConsole() {
+  process.stdout.write(
+    process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H'
+  );
+}
+console.log('object');
+console.log('object');
+console.log('object');
+console.log('object');
+console.log('object');
+console.log('object');
+console.log('object');
+console.log('object');
+console.log('object');
+console.log('object');
+console.log('object');
+// clearConsole()
