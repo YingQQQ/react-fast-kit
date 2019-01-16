@@ -28,7 +28,7 @@ function ensureSlash(inputPath, needsSlash) {
 const getPublicUrl = appPackageJson =>
   envPublicUrl || require(appPackageJson).homePage;
 
-function getServedUrl(appPackageJson) {
+function getServedPath(appPackageJson) {
   const publicUrl = getPublicUrl(appPackageJson);
   const servedUrl =
     envPublicUrl || (publicUrl ? url.parse(publicUrl).pathname : '/');
@@ -50,7 +50,7 @@ const moduleFileExtensions = [
 ];
 
 // 按照webpack相同的方式去解析文件路径
-const resloveModule = (resolveFn, filePath) => {
+const resolveModule = (resolveFn, filePath) => {
   const extension = moduleFileExtensions.find(extension =>
     fs.existsSync(resolveFn(`${filePath}.${extension}`))
   );
@@ -68,4 +68,6 @@ module.exports = {
   appSrc: resolveApp('src'),
   yarnLockFile: resolveApp('yarn.lock'),
   appNodeModules: resolveApp('node_modules'),
+  servedPath: getServedPath(resolveApp('package.json')),
+  appIndexJs: resolveModule(resolveApp, 'src/index'),
 }

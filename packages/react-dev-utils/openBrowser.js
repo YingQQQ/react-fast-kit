@@ -82,10 +82,10 @@ function startBrowserProcess(browser, url) {
 }
 
 function openBrowser(url) {
+  // default {action: 1, browser: undefined }
   const { action, value } = getBrowserEnv();
   switch (action) {
     case actions.NONE:
-      // Special case: BROWSER="none" will prevent opening completely.
       return false;
     case actions.SCRIPT:
       return executeNodeScript(value, url);
@@ -95,5 +95,6 @@ function openBrowser(url) {
       throw new Error('Not implemented.');
   }
 }
+
 
 module.exports = openBrowser;

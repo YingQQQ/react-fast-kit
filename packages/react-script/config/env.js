@@ -24,6 +24,7 @@ const dotenvFiles = [
   paths.dotenv
 ].filter(Boolean);
 
+
 // https://github.com/motdotla/dotenv
 // https://github.com/motdotla/dotenv-expand
 dotenvFiles.forEach(dotenvFile => {
@@ -35,6 +36,7 @@ dotenvFiles.forEach(dotenvFile => {
     );
   }
 });
+
 
 const appDirectory = fs.realpathSync(process.cwd());
 process.env.NODE_PATH = (process.env.NODE_PATH || '')
@@ -67,5 +69,6 @@ function getClientEnvironment(publicUrl) {
   };
   return { raw, stringified };
 }
+
 
 module.exports = getClientEnvironment;
