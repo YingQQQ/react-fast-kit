@@ -30,7 +30,7 @@ const shouldInlineRuntimeChunk =
   process.eventNames.INLINE_RUNTIME_CHUNK !== 'fasle';
 
 // 检查typescript配置文件
-const useTypescript = fs.existsSync(paths.appTsConfig);
+const useTypeScript = fs.existsSync(paths.appTsConfig);
 
 //样式文件后缀正则
 const cssRegex = /\.css$/;
@@ -113,9 +113,105 @@ function webpackConfig(webpackEnv) {
         : false
       : isEnvDevelopment && 'eval-source-map',
     entry: [
-      isEnvDevelopment && require.resolve('react-dev-utils/webpackHotDevClient'),
+      isEnvDevelopment &&
+        require.resolve('../../react-dev-utils/webpackHotDevClient'),
       paths.appSrc
     ].filter(Boolean),
+    output: {
+      path: isEnvProduction ? paths.appBuild : undefined,
+      // 告知 webpack 在 bundle 中引入「所包含模块信息」的相关注释
+      pathinfo: isEnvDevelopment,
+      filename: isEnvProduction
+        ? 'static/js/[name].[chunkhash:8].js'
+        : isEnvDevelopment && 'static/js/[name].chunk.js',
+      chunkFilename: isEnvProduction
+        ? 'static/js/[name].[chunkhash:8].chunk.js'
+        : isEnvDevelopment && 'static/js/[name].chunk.js',
+      // 引用资源的公共路径
+      publicPath: publicPath,
+      // https://webpack.docschina.org/configuration/output/#output-devtoolmodulefilenametemplate
+      devtoolModuleFilenameTemplate: isEnvProduction
+        ? info =>
+            path
+              .relative(paths.appSrc, info.absoluteResourcePath)
+              .replace(/\\/g, '/')
+        : isEnvDevelopment &&
+          (info => path.resolve(info.absoluteResourcePath).replace(/\\/g, '/'))
+    },
+    optimization: {
+      // 只有在生成模式运行
+      minimize: isEnvProduction,
+      minimizer: [
+        new TerserPlugin({
+          terserOptions: {
+            // 解析
+            parse: {
+              ecma: 8 // EcmaScript 8
+            },
+            // 压缩
+            compress: {
+              ecma: 5,
+              warnings: false, // 删除没有使用的代码和变量
+              // 默认true开启优化, !(a <= b) → a > b
+              // a = !b && !c && !d && !e → a=!(b||c||d||e),现在我们关闭
+              comparisons: false,
+              // 为了防止使用reduce函数时候报错,因为无法正确AST
+              inline: 2
+            },
+            // https://github.com/terser-js/terser#mangle-options
+            mangle: {
+              // 修复safari10浏览器在for循环的时候无法let两次的bug
+              // https://bugs.webkit.org/show_bug.cgi?id=171041
+              safari10: true
+            },
+            output: {
+              ecma: 5,
+              comments: false,
+              // 转义Unicode字符,像Emoji表情符号
+              ascii_only: true
+            }
+          },
+          // 启动缓存和多线程
+          parallel: true,
+          cache: true,
+          sourceMap: shouldUseSourceMap
+        }),
+        // 默认的规则是https://cssnano.co/optimisations/
+        // 现在我们改用 safePostCssParser
+        new OptimizeCSSAssetsPlugin({
+          cssProcessorOptions: {
+            safe: safePostCssParser,
+            // https://github.com/postcss/postcss/blob/master/docs/source-maps.md
+            map: shouldUseSourceMap
+              ? {
+                  inline: false,
+                  annotation: true
+                }
+              : false
+          }
+        })
+      ],
+      // https://twitter.com/wSokra/status/969633336732905474
+      splitChunks: {
+        chunks: 'all',
+        name: false
+      },
+      // https://twitter.com/wSokra/status/969679223278505985
+      runtimeChunk: true
+    },
+    resolve: {
+      modules: ['node_modules'].concat(
+        process.env.NODE_PATH.split(path.delimiter).filter(Boolean)
+      ),
+      // 解析文件后缀,能够使用户在引入模块时不带扩展
+      extensions: paths.moduleFileExtensions.map(ext => `.${ext}`).filter(
+        ext => useTypeScript || !ext.includes('ts')
+      ),
+      plugins: [
+        PnpWebpackPlugin,
+        new ModuleScopePlugin(paths.appSrc, [paths.appPackageJson]),
+      ]
+    }
   };
 }
 

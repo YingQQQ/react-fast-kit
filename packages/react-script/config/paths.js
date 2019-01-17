@@ -70,4 +70,7 @@ module.exports = {
   appNodeModules: resolveApp('node_modules'),
   servedPath: getServedPath(resolveApp('package.json')),
   appIndexJs: resolveModule(resolveApp, 'src/index'),
+  appBuild: resolveApp('build'),
 }
+
+module.exports.moduleFileExtensions = moduleFileExtensions;
