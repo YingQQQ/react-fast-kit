@@ -20,6 +20,7 @@ const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const safePostCssParser = require('postcss-safe-parser');
 const ManifestPlugin = require('webpack-manifest-plugin');
 const WorkboxWebpackPlugin = require('workbox-webpack-plugin');
+const ModuleScopePlugin = require('../../react-dev-utils/ModuleScopePlugin');
 const getClientEnvironment = require('./env');
 const paths = require('./paths');
 
@@ -209,7 +210,47 @@ function webpackConfig(webpackEnv) {
       ),
       plugins: [
         PnpWebpackPlugin,
+        // 确保外部导入的模块只能来自src和node_module
         new ModuleScopePlugin(paths.appSrc, [paths.appPackageJson]),
+      ]
+    },
+    resolveLoader: {
+      plugins: [
+        PnpWebpackPlugin.moduleLoader(module),
+      ],
+    },
+    module: {
+      // 使错误导入变成错误而不是警告
+      strictExportPresence: true,
+      rules: [
+        {
+          // https://webpack.docschina.org/configuration/module/#rule-parser
+          parser: {
+            requireEnsure: false, // 禁用 require.ensure,因为不是标准
+          }
+        },
+        // eslint 检测代码, 在babel转义之前
+        {
+          test: /\.(js|mjs|jsx)$/,
+          enforce: 'pre', // 启动在编译之前
+          use: [
+            {
+              // eslint options (if necessary)
+              options: {
+                // // 指定错误报告的格式规范
+                formatter: require.resolve('../../react-dev-utils/eslintFormatter'),
+                eslintPath: require.resolve('eslint'),
+                baseConfig: {
+                  extends: [require.resolve('eslint-config-react-app')],
+                },
+                ignore: false,
+                useEslintrc: false,
+              },
+              loader: require.resolve('eslint-loader'),
+            }
+          ],
+          include: paths.appSrc,
+        }
       ]
     }
   };
