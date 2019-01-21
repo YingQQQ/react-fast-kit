@@ -20,7 +20,8 @@ const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const safePostCssParser = require('postcss-safe-parser');
 const ManifestPlugin = require('webpack-manifest-plugin');
 const WorkboxWebpackPlugin = require('workbox-webpack-plugin');
-const ModuleScopePlugin = require('../../react-dev-utils/ModuleScopePlugin');
+const ModuleScopePlugin = require('../../react-dev-tools/ModuleScopePlugin');
+const getCacheIdentifier = require('../../react-dev-tools/getCacheIdentifier');
 const getClientEnvironment = require('./env');
 const paths = require('./paths');
 
@@ -39,7 +40,7 @@ const cssModuleRegex = /\.module\.css$/;
 const sassRegex = /\.(scss|sass)$/;
 const sassModuleRegex = /\.module\.(scss|sass)$/;
 
-function webpackConfig(webpackEnv) {
+module.exports = function webpackConfig(webpackEnv) {
   const isEnvDevelopment = webpackEnv === 'development';
   const isEnvProduction = webpackEnv === 'production';
 
@@ -115,7 +116,7 @@ function webpackConfig(webpackEnv) {
       : isEnvDevelopment && 'eval-source-map',
     entry: [
       isEnvDevelopment &&
-        require.resolve('../../react-dev-utils/webpackHotDevClient'),
+        require.resolve('../../react-dev-tools/webpackHotDevClient'),
       paths.appSrc
     ].filter(Boolean),
     output: {
@@ -205,19 +206,17 @@ function webpackConfig(webpackEnv) {
         process.env.NODE_PATH.split(path.delimiter).filter(Boolean)
       ),
       // 解析文件后缀,能够使用户在引入模块时不带扩展
-      extensions: paths.moduleFileExtensions.map(ext => `.${ext}`).filter(
-        ext => useTypeScript || !ext.includes('ts')
-      ),
+      extensions: paths.moduleFileExtensions
+        .map(ext => `.${ext}`)
+        .filter(ext => useTypeScript || !ext.includes('ts')),
       plugins: [
         PnpWebpackPlugin,
         // 确保外部导入的模块只能来自src和node_module
-        new ModuleScopePlugin(paths.appSrc, [paths.appPackageJson]),
+        new ModuleScopePlugin(paths.appSrc, [paths.appPackageJson])
       ]
     },
     resolveLoader: {
-      plugins: [
-        PnpWebpackPlugin.moduleLoader(module),
-      ],
+      plugins: [PnpWebpackPlugin.moduleLoader(module)]
     },
     module: {
       // 使错误导入变成错误而不是警告
@@ -226,7 +225,7 @@ function webpackConfig(webpackEnv) {
         {
           // https://webpack.docschina.org/configuration/module/#rule-parser
           parser: {
-            requireEnsure: false, // 禁用 require.ensure,因为不是标准
+            requireEnsure: false // 禁用 require.ensure,因为不是标准
           }
         },
         // eslint 检测代码, 在babel转义之前
@@ -237,23 +236,64 @@ function webpackConfig(webpackEnv) {
             {
               // eslint options (if necessary)
               options: {
-                // // 指定错误报告的格式规范
-                formatter: require.resolve('../../react-dev-utils/eslintFormatter'),
+                // 指定错误报告的格式规范
+                formatter: require.resolve(
+                  '../../react-dev-tools/eslintFormatter'
+                ),
                 eslintPath: require.resolve('eslint'),
                 baseConfig: {
-                  extends: [require.resolve('eslint-config-react-app')],
+                  extends: [require.resolve('../../eslint-config-react-dev')]
                 },
                 ignore: false,
-                useEslintrc: false,
+                useEslintrc: false
               },
-              loader: require.resolve('eslint-loader'),
+              loader: require.resolve('eslint-loader')
             }
           ],
-          include: paths.appSrc,
+          include: paths.appSrc
+        },
+        {
+          oneOf: [
+            // url-loader可以设置图片大小限制，当图片超过限制时，其表现行为等同于file-loader，而当图片不超过限制时，
+            // 则会将图片以base64的形式打包进css文件，以减少请求次数。
+            {
+              test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/],
+              loader: require.resolve('url-loader'),
+              options: {
+                limit: 10000,
+                name: 'static/media/[name].[hash:8].[ext]'
+              }
+            },
+            // 使用babel编译项目中的JS
+            // 现阶段包括JSX,Flow,Typescript 和一些其他新特新
+            {
+              test: /\.(js|mjs|jsx|ts|tsx)$/,
+              include: paths.appSrc,
+              loader: require.resolve('babel-loader'),
+              options: {
+                // 检测是不是有bebel 宏文件加载
+                customize: require.resolve('../../babel-preset-react-dev/webpack-overrides'),
+                babelrc: false,
+                configFile: false,
+                presets: [require.resolve('../../babel-preset-react-dev')],
+                // 需要换成的插件
+                cacheIdentifier: getCacheIdentifier(
+                  isEnvProduction
+                    ? 'production'
+                    : isEnvDevelopment && 'development',
+                  [
+                    'babel-plugin-named-asset-import',
+                    'babel-preset-react-dev',
+                    'react-dev-tools',
+                    'react-scripts',
+                  ]
+                ),
+              }
+            }
+          ]
         }
       ]
     }
   };
 }
 
-webpackConfig('development');

@@ -16,5 +16,6 @@
     "*.{js,md,css,html}": [
       "git add"
     ]
-  }
+  },
+  "dependencies": {}
 }
