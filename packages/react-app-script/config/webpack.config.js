@@ -288,8 +288,74 @@ module.exports = function webpackConfig(webpackEnv) {
                     'react-app-scripts',
                   ]
                 ),
+                plugins: [
+                  [
+                    require.resolve('babel-plugin-named-asset-import'),
+                    {
+                      loaderMap: {
+                        svg: {
+                          ReactComponent:
+                            '@svgr/webpack?-prettier,-svgo![path]',
+                        },
+                      },
+                    },
+                  ],
+                ],
+                cacheDirectory: true,
+                cacheCompression: isEnvProduction,
+                // 省略换行和空格
+                compact: isEnvProduction,
               }
-            }
+            },
+            {
+              test: /\.(js|mjs)$/,
+              exclude: /@babel(?:\/|\\{1,2})runtime/,
+              loader: require.resolve('babel-loader'),
+              options: {
+                babelrc: false,
+                configFile: false,
+                compact: false,
+                presets: [
+                  [
+                    require.resolve('babel-preset-react-app/dependencies'),
+                    { helpers: true },
+                  ],
+                ],
+                cacheDirectory: true,
+                cacheCompression: isEnvProduction,
+                cacheIdentifier: getCacheIdentifier(
+                  isEnvProduction
+                    ? 'production'
+                    : isEnvDevelopment && 'development',
+                  [
+                    'babel-plugin-named-asset-import',
+                    'babel-preset-react-app',
+                    'react-dev-utils',
+                    'react-scripts',
+                  ]
+                ),
+                sourceMaps: false,
+              },
+            },
+            {
+              test: cssRegex,
+              exclude: cssModuleRegex,
+              use: getStyleLoaders({
+                importLoaders: 1,
+                sourceMap: isEnvProduction && shouldUseSourceMap,
+              }),
+              // https://github.com/webpack/webpack/issues/6571
+              sideEffects: true,
+            },
+            {
+              test: cssModuleRegex,
+              use: getStyleLoaders({
+                importLoaders: 1,
+                sourceMap: isEnvProduction && shouldUseSourceMap,
+                modules: true,
+                getLocalIdent: getCSSModuleLocalIdent,
+              }),
+            },
           ]
         }
       ]

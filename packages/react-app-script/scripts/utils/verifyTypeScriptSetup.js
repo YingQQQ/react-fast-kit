@@ -34,14 +34,14 @@ function verifyNoTypeScript() {
 }
 
 function verifyTypeScriptSetup() {
-  let fisrtTimeSetup;
+  let firstTimeSetup;
 
   if (!fs.existsSync(paths.appTsConfig)) {
     if (verifyNoTypeScript()) {
       return;
     }
     writeJson(paths.appTsConfig, {});
-    fisrtTimeSetup = true;
+    firstTimeSetup = true;
   }
 
   const isYarn = fs.existsSync(paths.yarnLockFile);
