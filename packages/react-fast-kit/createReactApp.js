@@ -34,7 +34,7 @@ const program = new commander.Command(packageJson.name)
   .option('--typescript', 'install typescript dependencies packages')
   .option(
     '--select-version <alternative-package>',
-    'use a non-standard version of react-scripts'
+    'use a non-standard version of react-app-scripts'
   )
   .allowUnknownOption()
   .parse(process.argv);
@@ -134,7 +134,7 @@ function createDirectory(
           `Please update to Node 6 or higher for a better, fully supported experience.\n`
       )
     );
-    version = 'react-scripts@0.9.x';
+    version = 'react-app-scripts';
   }
 
   if (!useYarn) {
@@ -149,7 +149,7 @@ function createDirectory(
           )
         );
       }
-      version = 'react-scripts@0.9.x';
+      version = 'react-app-scripts';
     }
   } else if (usePnp) {
     const { hasMinYarnPnp, yarnVersion } = checkYarnVersion();
@@ -260,14 +260,15 @@ function run(
         init.apply(null, JSON.parse(process.argv[1]));
         `
       );
-      if (version === 'react-scripts@0.9.x') {
-        console.log(
-          chalk.yellow(
-            `\nNote: the project was bootstrapped with an old unsupported version of tools.\n` +
-              `Please update to Node >=6 and npm >=3 to get supported tools in new projects.\n`
-          )
-        );
-      }
+      // 旧版本
+      // if (version === 'react-app-scripts@0.9.x') {
+      //   console.log(
+      //     chalk.yellow(
+      //       `\nNote: the project was bootstrapped with an old unsupported version of tools.\n` +
+      //         `Please update to Node >=6 and npm >=3 to get supported tools in new projects.\n`
+      //     )
+      //   );
+      // }
     })
     .catch(reason => {
       console.log();
@@ -512,8 +513,6 @@ function getPackageName(installPackage) {
       });
   } else if (installPackage.indexOf('git+') === 0) {
     // 如果是git上面拉取的包
-    // git+https://github.com/mycompany/react-scripts.git
-    // git+ssh://github.com/mycompany/react-scripts.git#v1.2.3
     return Promise.resolve(installPackage.match(/([^/]+)\.git(#.*)?$/)[1]);
   } else if (installPackage.match(/.+@/)) {
     // 如果匹配@,则剔除@符号
@@ -601,7 +600,7 @@ function getProxy() {
 }
 
 function getInstallPackage(version, originalDirectory) {
-  let packageToInstall = 'react-scripts';
+  let packageToInstall = 'react-app-scripts';
 
   const validSemver = semver.valid(version);
 

@@ -285,7 +285,7 @@ module.exports = function webpackConfig(webpackEnv) {
                     'babel-plugin-named-asset-import',
                     'babel-preset-react-dev',
                     'react-dev-tools',
-                    'react-scripts',
+                    'react-app-scripts',
                   ]
                 ),
               }
