@@ -71,6 +71,9 @@ module.exports = {
   servedPath: getServedPath(resolveApp('package.json')),
   appIndexJs: resolveModule(resolveApp, 'src/index'),
   appBuild: resolveApp('build'),
+  appHtml: resolveApp('public/index.html'),
+  publicUrl: getPublicUrl(resolveApp('package.json')),
+  appPublic: resolveApp('public'),
 }
 
 module.exports.moduleFileExtensions = moduleFileExtensions;

@@ -110,7 +110,6 @@ module.exports = function init(
     start: 'react-app-scripts start',
     build: 'react-app-scripts build',
     test: 'react-app-scripts test',
-    eject: 'react-app-scripts eject'
   };
 
   // Setup the eslint config

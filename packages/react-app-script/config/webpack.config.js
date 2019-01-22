@@ -1,27 +1,27 @@
 'use strict';
 
 const fs = require('fs-extra');
-const htmlWebpackPlugin = require('html-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 const path = require('path');
 const PnpWebpackPlugin = require('pnp-webpack-plugin');
 const resolve = require('resolve');
 const webpack = require('webpack');
-
-/**
- * 这个Webpack插件强制所有需要的模块的整个路径匹配磁盘上实际路径的具体情况。
- * 使用这个插件可以帮助减轻开发人员在OSX上工作的情况，
- * 因为OSX不遵循严格的路径敏感性，这会导致与其他开发人员的冲突，
- * 或者构建运行其他操作系统的盒子，这些系统需要正确的路径。
- */
 const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin-alt');
 const safePostCssParser = require('postcss-safe-parser');
 const ManifestPlugin = require('webpack-manifest-plugin');
 const WorkboxWebpackPlugin = require('workbox-webpack-plugin');
 const ModuleScopePlugin = require('../../react-dev-tools/ModuleScopePlugin');
 const getCacheIdentifier = require('../../react-dev-tools/getCacheIdentifier');
+const getCSSModuleLocalIdent = require('../../react-dev-tools/getCSSModuleLocalIdent');
+const InlineChunkHtmlPlugin = require('../../react-dev-tools/InlineChunkHtmlPlugin');
+const InterpolateHtmlPlugin = require('../../react-dev-tools/InterpolateHtmlPlugin');
+const ModuleNotFoundPlugin = require('../../react-dev-tools/ModuleNotFoundPlugin');
+const WatchMissingNodeModulesPlugin = require('../../react-dev-tools/WatchMissingNodeModulesPlugin');
+const typescriptFormatter = require('../../react-dev-tools/typescriptFormatter');
 const getClientEnvironment = require('./env');
 const paths = require('./paths');
 
@@ -272,7 +272,9 @@ module.exports = function webpackConfig(webpackEnv) {
               loader: require.resolve('babel-loader'),
               options: {
                 // 检测是不是有bebel 宏文件加载
-                customize: require.resolve('../../babel-preset-react-dev/webpack-overrides'),
+                customize: require.resolve(
+                  '../../babel-preset-react-dev/webpack-overrides'
+                ),
                 babelrc: false,
                 configFile: false,
                 presets: [require.resolve('../../babel-preset-react-dev')],
@@ -285,7 +287,7 @@ module.exports = function webpackConfig(webpackEnv) {
                     'babel-plugin-named-asset-import',
                     'babel-preset-react-dev',
                     'react-dev-tools',
-                    'react-app-scripts',
+                    'react-app-scripts'
                   ]
                 ),
                 plugins: [
@@ -294,17 +296,16 @@ module.exports = function webpackConfig(webpackEnv) {
                     {
                       loaderMap: {
                         svg: {
-                          ReactComponent:
-                            '@svgr/webpack?-prettier,-svgo![path]',
-                        },
-                      },
-                    },
-                  ],
+                          ReactComponent: '@svgr/webpack?-prettier,-svgo![path]'
+                        }
+                      }
+                    }
+                  ]
                 ],
                 cacheDirectory: true,
                 cacheCompression: isEnvProduction,
                 // 省略换行和空格
-                compact: isEnvProduction,
+                compact: isEnvProduction
               }
             },
             {
@@ -318,8 +319,8 @@ module.exports = function webpackConfig(webpackEnv) {
                 presets: [
                   [
                     require.resolve('babel-preset-react-app/dependencies'),
-                    { helpers: true },
-                  ],
+                    { helpers: true }
+                  ]
                 ],
                 cacheDirectory: true,
                 cacheCompression: isEnvProduction,
@@ -331,21 +332,21 @@ module.exports = function webpackConfig(webpackEnv) {
                     'babel-plugin-named-asset-import',
                     'babel-preset-react-app',
                     'react-dev-utils',
-                    'react-scripts',
+                    'react-scripts'
                   ]
                 ),
-                sourceMaps: false,
-              },
+                sourceMaps: false
+              }
             },
             {
               test: cssRegex,
               exclude: cssModuleRegex,
               use: getStyleLoaders({
                 importLoaders: 1,
-                sourceMap: isEnvProduction && shouldUseSourceMap,
+                sourceMap: isEnvProduction && shouldUseSourceMap
               }),
               // https://github.com/webpack/webpack/issues/6571
-              sideEffects: true,
+              sideEffects: true
             },
             {
               test: cssModuleRegex,
@@ -353,13 +354,154 @@ module.exports = function webpackConfig(webpackEnv) {
                 importLoaders: 1,
                 sourceMap: isEnvProduction && shouldUseSourceMap,
                 modules: true,
-                getLocalIdent: getCSSModuleLocalIdent,
-              }),
+                getLocalIdent: getCSSModuleLocalIdent
+              })
             },
+            {
+              test: sassRegex,
+              use: getStyleLoaders(
+                {
+                  importLoaders: 2,
+                  sourceMap: isEnvProduction && shouldUseSourceMap
+                },
+                'sass-loader'
+              ),
+              sideEffects: true
+            },
+            {
+              test: sassModuleRegex,
+              use: getStyleLoaders(
+                {
+                  importLoaders: 2,
+                  sourceMap: isEnvProduction && shouldUseSourceMap,
+                  modules: true,
+                  getLocalIdent: getCSSModuleLocalIdent
+                },
+                'sass-loader'
+              )
+            },
+            {
+              loader: require.resolve('file-loader'),
+              exclude: [/\.(js|mjs|jsx|ts|tsx)$/, /\.html$/, /\.json$/],
+              options: {
+                name: 'static/media/[name].[hash:8].[ext]'
+              }
+            }
           ]
         }
       ]
-    }
+    },
+    plugins: [
+      new HtmlWebpackPlugin(
+        Object.assign(
+          {},
+          {
+            inject: true,
+            template: paths.appHtml
+          },
+          isEnvProduction
+            ? {
+                minify: {
+                  removeComments: true,
+                  collapseWhitespace: true,
+                  removeRedundantAttributes: true,
+                  useShortDoctype: true,
+                  removeEmptyAttributes: true,
+                  removeStyleLinkTypeAttributes: true,
+                  keepClosingSlash: true,
+                  minifyJS: true,
+                  minifyCSS: true,
+                  minifyURLs: true
+                }
+              }
+            : undefined
+        )
+      ),
+      isEnvProduction &&
+        shouldInlineRuntimeChunk &&
+        new InlineChunkHtmlPlugin(HtmlWebpackPlugin, [/runtime~.+[.]js/]),
+      // 在开发中使得某些变量可以在index.html中可用,
+      // 在生产模式中除非指定主页路径否则是空字符串,
+      // 在“package.json”中，在这种情况下，它将是该URL的路径名。
+      // 在开发中，这将是一个空字符串。
+      new InterpolateHtmlPlugin(HtmlWebpackPlugin, env.raw),
+      // 模块没有找到的错误提示
+      new ModuleNotFoundPlugin(paths.appPath),
+      // 设置环境变量
+      new webpack.DefinePlugin(env.stringified),
+      isEnvDevelopment && new webpack.HotModuleReplacementPlugin(),
+      /**
+       * 这个Webpack插件强制所有需要的模块的整个路径匹配磁盘上实际路径的具体情况。
+       * 使用这个插件可以帮助减轻开发人员在OSX上工作的情况，
+       * 因为OSX不遵循严格的路径敏感性，这会导致与其他开发人员的冲突，
+       * 或者构建运行其他操作系统的盒子，这些系统需要正确的路径。
+       */
+      isEnvDevelopment && new CaseSensitivePathsPlugin(),
+      isEnvDevelopment &&
+        new WatchMissingNodeModulesPlugin(paths.appNodeModules),
+      isEnvProduction &&
+        new MiniCssExtractPlugin({
+          filename: 'static/css/[name].[contenthash:8].css',
+          chunkFilename: 'static/css/[name].[contenthash:8].chunk.css'
+        }),
+      // 生成包含所有资产文件名映射的清单文件
+      new ManifestPlugin({
+        fileName: 'asset-manifest.json',
+        publicPath: publicPath
+      }),
+      // 忽视moment.js, 因为这个库太大了, 如果真得要使用,移除规则就行
+      // https://github.com/jmblog/how-to-optimize-momentjs-with-webpack
+      new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
+      isEnvProduction &&
+        new WorkboxWebpackPlugin.GenerateSW({
+          clientsClaim: true,
+          exclude: [/\.map$/, /asset-manifest\.json$/],
+          importWorkboxFrom: 'cdn',
+          navigateFallback: publicUrl + '/index.html',
+          navigateFallbackBlacklist: [
+            // 排除 URLs以/_开始的, 因为看起来并不会被调用
+            new RegExp('^/_'),
+            // 排除 URLs 包含.的, 因为看起来并不是源码或者是SPA中的路由
+            new RegExp('/[^/]+\\.[^/]+$')
+          ]
+        }),
+      // TypeScript 类型检查
+      useTypeScript &&
+        new ForkTsCheckerWebpackPlugin({
+          typescript: resolve.sync('typescript', {
+            basedir: paths.appNodeModules
+          }),
+          async: false,
+          checkSyntacticErrors: true,
+          tsconfig: paths.appTsConfig,
+          compilerOptions: {
+            module: 'esnext',
+            moduleResolution: 'node',
+            resolveJsonModule: true,
+            isolatedModules: true,
+            noEmit: true,
+            jsx: 'preserve'
+          },
+          reportFiles: [
+            '**',
+            '!**/*.json',
+            '!**/__tests__/**',
+            '!**/?(*.)(spec|test).*',
+            '!**/src/setupProxy.*',
+            '!**/src/setupTests.*'
+          ],
+          watch: paths.appSrc,
+          silent: true,
+          formatter: typescriptFormatter
+        })
+    ].filter(Boolean),
+    node: {
+      dgram: 'empty',
+      fs: 'empty',
+      net: 'empty',
+      tls: 'empty',
+      child_process: 'empty',
+    },
+    performance: false,
   };
-}
-
+};
