@@ -250,11 +250,11 @@ function verifyTypeScriptSetup() {
     writeJson(paths.appTsConfig, appTsConfig);
   }
 
-  // Reference `react-app-scripts` types
+  // Reference `react-app-script` types
   if (!fs.existsSync(paths.appTypeDeclarations)) {
     fs.writeFileSync(
       paths.appTypeDeclarations,
-      `/// <reference types="react-app-scripts" />${os.EOL}`
+      `/// <reference types="react-app-script" />${os.EOL}`
     );
   }
 }

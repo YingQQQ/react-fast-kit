@@ -48,6 +48,6 @@ switch (script) {
   }
   default:
     console.log('Unknown script "' + script + '".');
-    console.log('Perhaps you need to update react-app-scripts?');
+    console.log('Perhaps you need to update react-app-script?');
     break;
 }

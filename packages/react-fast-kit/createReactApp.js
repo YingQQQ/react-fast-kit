@@ -34,7 +34,7 @@ const program = new commander.Command(packageJson.name)
   .option('--typescript', 'install typescript dependencies packages')
   .option(
     '--select-version <alternative-package>',
-    'use a non-standard version of react-app-scripts'
+    'use a non-standard version of react-app-script'
   )
   .allowUnknownOption()
   .parse(process.argv);
@@ -134,7 +134,7 @@ function createDirectory(
           `Please update to Node 6 or higher for a better, fully supported experience.\n`
       )
     );
-    version = 'react-app-scripts';
+    version = 'react-app-script';
   }
 
   if (!useYarn) {
@@ -149,7 +149,7 @@ function createDirectory(
           )
         );
       }
-      version = 'react-app-scripts';
+      version = 'react-app-script';
     }
   } else if (usePnp) {
     const { hasMinYarnPnp, yarnVersion } = checkYarnVersion();
@@ -261,7 +261,7 @@ function run(
         `
       );
       // 旧版本
-      // if (version === 'react-app-scripts@0.9.x') {
+      // if (version === 'react-app-script@0.9.x') {
       //   console.log(
       //     chalk.yellow(
       //       `\nNote: the project was bootstrapped with an old unsupported version of tools.\n` +
@@ -600,7 +600,7 @@ function getProxy() {
 }
 
 function getInstallPackage(version, originalDirectory) {
-  let packageToInstall = 'react-app-scripts';
+  let packageToInstall = 'react-app-script';
 
   const validSemver = semver.valid(version);
 

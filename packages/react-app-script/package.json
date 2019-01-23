@@ -4,7 +4,7 @@
   "description": "react development base kit",
   "author": "Y",
   "bin": {
-    "react-app-scripts": "./bin/react-app-scripts.js"
+    "react-app-script": "./bin/react-app-script.js"
   },
   "devDependencies": {
     "cross-env": "^5.2.0"
