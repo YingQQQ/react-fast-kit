@@ -14,14 +14,14 @@ const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin-alt')
 const safePostCssParser = require('postcss-safe-parser');
 const ManifestPlugin = require('webpack-manifest-plugin');
 const WorkboxWebpackPlugin = require('workbox-webpack-plugin');
-const ModuleScopePlugin = require('react-dev-tools/ModuleScopePlugin');
-const getCacheIdentifier = require('react-dev-tools/getCacheIdentifier');
-const getCSSModuleLocalIdent = require('react-dev-tools/getCSSModuleLocalIdent');
-const InlineChunkHtmlPlugin = require('react-dev-tools/InlineChunkHtmlPlugin');
-const InterpolateHtmlPlugin = require('react-dev-tools/InterpolateHtmlPlugin');
-const ModuleNotFoundPlugin = require('react-dev-tools/ModuleNotFoundPlugin');
-const WatchMissingNodeModulesPlugin = require('react-dev-tools/WatchMissingNodeModulesPlugin');
-const typescriptFormatter = require('react-dev-tools/typescriptFormatter');
+const ModuleScopePlugin = require('react-dev-lambda/ModuleScopePlugin');
+const getCacheIdentifier = require('react-dev-lambda/getCacheIdentifier');
+const getCSSModuleLocalIdent = require('react-dev-lambda/getCSSModuleLocalIdent');
+const InlineChunkHtmlPlugin = require('react-dev-lambda/InlineChunkHtmlPlugin');
+const InterpolateHtmlPlugin = require('react-dev-lambda/InterpolateHtmlPlugin');
+const ModuleNotFoundPlugin = require('react-dev-lambda/ModuleNotFoundPlugin');
+const WatchMissingNodeModulesPlugin = require('react-dev-lambda/WatchMissingNodeModulesPlugin');
+const typescriptFormatter = require('react-dev-lambda/typescriptFormatter');
 const getClientEnvironment = require('./env');
 const paths = require('./paths');
 
@@ -116,7 +116,7 @@ module.exports = function webpackConfig(webpackEnv) {
       : isEnvDevelopment && 'eval-source-map',
     entry: [
       isEnvDevelopment &&
-        require.resolve('react-dev-tools/webpackHotDevClient'),
+        require.resolve('react-dev-lambda/webpackHotDevClient'),
       paths.appSrc
     ].filter(Boolean),
     output: {
@@ -238,7 +238,7 @@ module.exports = function webpackConfig(webpackEnv) {
               options: {
                 // 指定错误报告的格式规范
                 formatter: require.resolve(
-                  'react-dev-tools/eslintFormatter'
+                  'react-dev-lambda/eslintFormatter'
                 ),
                 eslintPath: require.resolve('eslint'),
                 baseConfig: {
@@ -286,7 +286,7 @@ module.exports = function webpackConfig(webpackEnv) {
                   [
                     'babel-plugin-named-asset-import',
                     'babel-preset-react-dev',
-                    'react-dev-tools',
+                    'react-dev-lambda',
                     'react-app-scripts'
                   ]
                 ),

@@ -18,16 +18,16 @@ const chalk = require('chalk');
 const fs = require('fs');
 const webpack = require('webpack');
 const WebpackDevServer = require('webpack-dev-server');
-const clearConsole = require('react-dev-tools/clearConsole');
-const checkRequiredFiles = require('react-dev-tools/checkRequiredFiles');
-const openBrowser = require('react-dev-tools/openBrowser');
-const { checkBrowsers } = require('react-dev-tools/browsersHelper');
+const clearConsole = require('react-dev-lambda/clearConsole');
+const checkRequiredFiles = require('react-dev-lambda/checkRequiredFiles');
+const openBrowser = require('react-dev-lambda/openBrowser');
+const { checkBrowsers } = require('react-dev-lambda/browsersHelper');
 const {
   choosePort,
   createCompiler,
   prepareProxy,
   prepareUrls
-} = require('react-dev-tools/WebpackDevServerUtils');
+} = require('react-dev-lambda/WebpackDevServerUtils');
 const paths = require('../config/paths');
 const configFactory = require('../config/webpack.config');
 const createDevServerConfig = require('../config/webpackDevServer.config');
