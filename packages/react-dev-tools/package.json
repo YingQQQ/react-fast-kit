@@ -1,7 +1,7 @@
 {
-  "name": "react-dev-tools",
+  "name": "react-dev-lambda",
   "version": "1.0.1",
-  "description": "react dev packages",
+  "description": "react dev lambda",
   "author": "Y",
   "devDependencies": {
     "cross-env": "^5.2.0"
