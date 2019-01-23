@@ -2,15 +2,14 @@
   "name": "react-fast-kit",
   "version": "1.0.1",
   "description": "To use development react components by myself",
-  "main": "index.js",
   "repository": "https://github.com/YingQQQ/react-dev-cli.git",
   "author": "YingQQQ <yingqi2008win@gmail.com>",
   "license": "MIT",
-  "scripts": {
-    "start": "node ./index"
-  },
   "bin": {
-    "createComponent": "./index"
+    "react-fast-kit": "./index.js"
+  },
+  "engines": {
+    "node": ">=6"
   },
   "dependencies": {
     "chalk": "^2.4.1",
