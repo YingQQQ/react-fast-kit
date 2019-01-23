@@ -1,12 +1,11 @@
 {
-  "name": "react-dev-cli",
+  "name": "react-fast-kit",
   "version": "1.0.1",
   "description": "To use development react components by myself",
   "main": "index.js",
   "repository": "https://github.com/YingQQQ/react-dev-cli.git",
   "author": "YingQQQ <yingqi2008win@gmail.com>",
   "license": "MIT",
-  "private": true,
   "scripts": {
     "start": "node ./index"
   },
