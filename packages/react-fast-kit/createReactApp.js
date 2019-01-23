@@ -826,4 +826,3 @@ function checkYarnVersion() {
   };
 }
 
-console.log(chalk.yellow('end'));

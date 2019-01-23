@@ -1,5 +1,5 @@
 {
-  "name": "yes",
+  "name": "eslint-config-react-dev",
   "version": "1.0.0",
   "description": "eslint react config",
   "main": "index.js",

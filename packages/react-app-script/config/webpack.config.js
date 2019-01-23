@@ -14,14 +14,14 @@ const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin-alt')
 const safePostCssParser = require('postcss-safe-parser');
 const ManifestPlugin = require('webpack-manifest-plugin');
 const WorkboxWebpackPlugin = require('workbox-webpack-plugin');
-const ModuleScopePlugin = require('../../react-dev-tools/ModuleScopePlugin');
-const getCacheIdentifier = require('../../react-dev-tools/getCacheIdentifier');
-const getCSSModuleLocalIdent = require('../../react-dev-tools/getCSSModuleLocalIdent');
-const InlineChunkHtmlPlugin = require('../../react-dev-tools/InlineChunkHtmlPlugin');
-const InterpolateHtmlPlugin = require('../../react-dev-tools/InterpolateHtmlPlugin');
-const ModuleNotFoundPlugin = require('../../react-dev-tools/ModuleNotFoundPlugin');
-const WatchMissingNodeModulesPlugin = require('../../react-dev-tools/WatchMissingNodeModulesPlugin');
-const typescriptFormatter = require('../../react-dev-tools/typescriptFormatter');
+const ModuleScopePlugin = require('react-dev-tools/ModuleScopePlugin');
+const getCacheIdentifier = require('react-dev-tools/getCacheIdentifier');
+const getCSSModuleLocalIdent = require('react-dev-tools/getCSSModuleLocalIdent');
+const InlineChunkHtmlPlugin = require('react-dev-tools/InlineChunkHtmlPlugin');
+const InterpolateHtmlPlugin = require('react-dev-tools/InterpolateHtmlPlugin');
+const ModuleNotFoundPlugin = require('react-dev-tools/ModuleNotFoundPlugin');
+const WatchMissingNodeModulesPlugin = require('react-dev-tools/WatchMissingNodeModulesPlugin');
+const typescriptFormatter = require('react-dev-tools/typescriptFormatter');
 const getClientEnvironment = require('./env');
 const paths = require('./paths');
 
@@ -116,7 +116,7 @@ module.exports = function webpackConfig(webpackEnv) {
       : isEnvDevelopment && 'eval-source-map',
     entry: [
       isEnvDevelopment &&
-        require.resolve('../../react-dev-tools/webpackHotDevClient'),
+        require.resolve('react-dev-tools/webpackHotDevClient'),
       paths.appSrc
     ].filter(Boolean),
     output: {
@@ -238,7 +238,7 @@ module.exports = function webpackConfig(webpackEnv) {
               options: {
                 // 指定错误报告的格式规范
                 formatter: require.resolve(
-                  '../../react-dev-tools/eslintFormatter'
+                  'react-dev-tools/eslintFormatter'
                 ),
                 eslintPath: require.resolve('eslint'),
                 baseConfig: {
@@ -273,11 +273,11 @@ module.exports = function webpackConfig(webpackEnv) {
               options: {
                 // 检测是不是有bebel 宏文件加载
                 customize: require.resolve(
-                  '../../babel-preset-react-dev/webpack-overrides'
+                  'babel-preset-react-dev/webpack-overrides'
                 ),
                 babelrc: false,
                 configFile: false,
-                presets: [require.resolve('../../babel-preset-react-dev')],
+                presets: [require.resolve('babel-preset-react-dev')],
                 // 需要换成的插件
                 cacheIdentifier: getCacheIdentifier(
                   isEnvProduction

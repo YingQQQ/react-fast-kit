@@ -74,6 +74,6 @@ module.exports = {
   appHtml: resolveApp('public/index.html'),
   publicUrl: getPublicUrl(resolveApp('package.json')),
   appPublic: resolveApp('public'),
-}
+} 
 
 module.exports.moduleFileExtensions = moduleFileExtensions;

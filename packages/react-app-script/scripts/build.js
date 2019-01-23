@@ -26,11 +26,11 @@ const fs = require('fs-extra');
 const bfj = require('bfj');
 const configFactory = require('../config/webpack.config');
 const paths = require('../config/paths');
-const checkRequiredFiles = require('../../react-dev-tools/checkRequiredFiles');
-const formatWebpackMessages = require('../../react-dev-tools/formatWebpackMessages');
-const printHostingInstructions = require('../../react-dev-tools/printHostingInstructions');
-const FileSizeReporter = require('../../react-dev-tools/FileSizeReporter');
-const printBuildError = require('../../react-dev-tools/printBuildError');
+const checkRequiredFiles = require('react-dev-tools/checkRequiredFiles');
+const formatWebpackMessages = require('react-dev-tools/formatWebpackMessages');
+const printHostingInstructions = require('react-dev-tools/printHostingInstructions');
+const FileSizeReporter = require('react-dev-tools/FileSizeReporter');
+const printBuildError = require('react-dev-tools/printBuildError');
 
 
 const measureFileSizesBeforeBuild =
