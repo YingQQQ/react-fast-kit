@@ -6,7 +6,7 @@
   "author": "YingQQQ <yingqi2008win@gmail.com>",
   "license": "MIT",
   "bin": {
-    "react-fast-kit": "./index.js"
+    "create-react-fast-kit": "./index.js"
   },
   "engines": {
     "node": ">=6"

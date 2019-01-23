@@ -7,10 +7,12 @@
     "react-app-script": "./bin/react-app-script.js"
   },
   "devDependencies": {
-    "cross-env": "^5.2.0"
+    "cross-env": "^5.2.0",
+    "react": "^16.7.0",
+    "react-dom": "^16.7.0"
   },
   "engines": {
-    "node": ">=4"
+    "node": ">=6"
   },
   "dependencies": {
     "@babel/core": "^7.2.2",
