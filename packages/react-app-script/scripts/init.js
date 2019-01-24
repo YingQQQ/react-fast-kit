@@ -121,7 +121,7 @@ module.exports = function init(
 
   fs.writeFileSync(
     path.join(appPath, 'package.json'),
-    JSON.parse(appPackage, null, 2) + os.EOL
+    JSON.stringify(appPackage, null, 2) + os.EOL
   );
 
   const readmeExists = fs.existsSync(path.join(appPath, 'READEME.md'));
