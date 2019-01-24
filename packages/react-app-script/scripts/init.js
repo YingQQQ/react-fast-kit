@@ -137,7 +137,7 @@ module.exports = function init(
     ? path.resolve(originalDirectory, template)
     : path.join(ownPath, useTypeScript ? 'template-typescript' : 'template');
 
-  if (templatePath) {
+  if (fs.existsSync(templatePath)) {
     fs.copySync(templatePath, appPath);
   } else {
     console.error(
