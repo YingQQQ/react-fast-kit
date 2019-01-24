@@ -150,7 +150,7 @@ module.exports = function init(
   // 因此在生产的时候修改回原本的文件命名
   // https://github.com/npm/npm/issues/1862
   try {
-    fs.removeSync(
+    fs.moveSync(
       path.join(appPath, 'gitignore'),
       path.join(appPath, '.gitignore'),
       []
