@@ -138,7 +138,7 @@ module.exports = function init(
     : path.join(ownPath, useTypeScript ? 'template-typescript' : 'template');
 
   if (templatePath) {
-    fs.copyFileSync(templatePath, appPath);
+    fs.copySync(templatePath, appPath);
   } else {
     console.error(
       `Could not locate supplied template: ${chalk.green(templatePath)}`
