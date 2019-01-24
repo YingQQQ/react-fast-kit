@@ -93,7 +93,7 @@ module.exports = function init(
 ) {
   // 返回 path 的目录名
   // require.resolve此操作只返回解析后的文件名，不会加载该模块
-  const ownPath = path.resolve(
+  const ownPath = path.dirname(
     require.resolve(path.join(__dirname, '..', 'package.json'))
   );
 
@@ -136,6 +136,9 @@ module.exports = function init(
   const templatePath = template
     ? path.resolve(originalDirectory, template)
     : path.join(ownPath, useTypeScript ? 'template-typescript' : 'template');
+
+  console.log(templatePath);
+  process.exit(1);
 
   if (fs.existsSync(templatePath)) {
     fs.copySync(templatePath, appPath);
