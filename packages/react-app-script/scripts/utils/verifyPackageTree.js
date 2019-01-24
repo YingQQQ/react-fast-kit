@@ -14,7 +14,8 @@ function verifyPackageTree() {
     'webpack',
     'webpack-dev-server'
   ];
-  const semverRegex = /\bv?(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[\da-z-]+(?:\.[\da-z-]+)*)?(?:\+[\da-z-]+(?:\.[\da-z-]+)*)?\b/gi;
+  const getSemverRegex = () =>
+    /\bv?(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[\da-z-]+(?:\.[\da-z-]+)*)?(?:\+[\da-z-]+(?:\.[\da-z-]+)*)?\b/gi;
   const ownPackageJson = require('../../package.json');
   const expectedVersionsByDep = {};
   depsToCheck.forEach(dep => {
@@ -22,7 +23,7 @@ function verifyPackageTree() {
     if (!expectedVersion) {
       throw new Error('This dependency list is outdated, fix it.');
     }
-    if (!semverRegex.test(expectedVersion)) {
+    if (!getSemverRegex().test(expectedVersion)) {
       throw new Error(
         `The ${dep} package should be pinned, instead got version ${expectedVersion}.`
       );
@@ -49,11 +50,13 @@ function verifyPackageTree() {
       if (!fs.existsSync(maybeDep)) {
         return;
       }
-      const maybeDepPackageJson = path.resolve(currentDir, 'package.json');
+      const maybeDepPackageJson = path.resolve(maybeDep, 'package.json');
       if (!fs.existsSync(maybeDepPackageJson)) {
         return;
       }
-      const depPackageJson = fs.readFileSync(maybeDepPackageJson, 'utf-8');
+      const depPackageJson = JSON.parse(
+        fs.readFileSync(maybeDepPackageJson, 'utf8')
+      );
       const expectedVersion = expectedVersionsByDep[dep];
       if (depPackageJson.version !== expectedVersion) {
         console.error(
