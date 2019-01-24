@@ -137,7 +137,7 @@ module.exports = function init(
     ? path.resolve(originalDirectory, template)
     : path.join(ownPath, useTypeScript ? 'template-typescript' : 'template');
 
-  console.log(templatePath);
+  console.log(chalk.red(templatePath));
   process.exit(1);
 
   if (fs.existsSync(templatePath)) {
