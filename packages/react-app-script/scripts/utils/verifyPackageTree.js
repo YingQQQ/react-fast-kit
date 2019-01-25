@@ -60,7 +60,7 @@ function verifyPackageTree() {
       const expectedVersion = expectedVersionsByDep[dep];
       if (depPackageJson.version !== expectedVersion) {
         console.error(
-          chalk.bgWhite(
+          chalk.red(
             `\nThere might be a problem with the project dependency tree.\n` +
               `It is likely ${chalk.bold(
                 'not'

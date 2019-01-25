@@ -63,6 +63,7 @@ const resolveModule = (resolveFn, filePath) => {
 
 
 module.exports = {
+  appPath: resolveApp('.'),
   dotenv: resolveApp('.env'),
   appTsConfig: resolveApp('tsconfig.json'),
   appSrc: resolveApp('src'),

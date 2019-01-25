@@ -54,7 +54,7 @@ const writeStatsJson = argv.indexOf('--stats') !== -1;
 // 生产webpack.config
 const config = configFactory('production');
 
-const { checkBrowsers } = require('react-dev-utils/browsersHelper');
+const { checkBrowsers } = require('react-dev-lambda/browsersHelper');
 checkBrowsers(paths.appPath, isInteractive)
   .then(() => {
     return measureFileSizesBeforeBuild(paths.appBuild);

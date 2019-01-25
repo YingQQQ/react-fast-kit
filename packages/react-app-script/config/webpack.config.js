@@ -1,19 +1,20 @@
 'use strict';
 
+const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin-alt');
 const fs = require('fs-extra');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const ManifestPlugin = require('webpack-manifest-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const path = require('path');
 const PnpWebpackPlugin = require('pnp-webpack-plugin');
 const resolve = require('resolve');
-const webpack = require('webpack');
-const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
-const TerserPlugin = require('terser-webpack-plugin');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
-const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin-alt');
 const safePostCssParser = require('postcss-safe-parser');
-const ManifestPlugin = require('webpack-manifest-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
+const webpack = require('webpack');
 const WorkboxWebpackPlugin = require('workbox-webpack-plugin');
+
 const ModuleScopePlugin = require('react-dev-lambda/ModuleScopePlugin');
 const getCacheIdentifier = require('react-dev-lambda/getCacheIdentifier');
 const getCSSModuleLocalIdent = require('react-dev-lambda/getCSSModuleLocalIdent');
@@ -237,12 +238,10 @@ module.exports = function webpackConfig(webpackEnv) {
               // eslint options (if necessary)
               options: {
                 // 指定错误报告的格式规范
-                formatter: require.resolve(
-                  'react-dev-lambda/eslintFormatter'
-                ),
+                formatter: require.resolve('react-dev-lambda/eslintFormatter'),
                 eslintPath: require.resolve('eslint'),
                 baseConfig: {
-                  extends: [require.resolve('../../eslint-config-react-dev')]
+                  extends: [require.resolve('eslint-config-react-dev')]
                 },
                 ignore: false,
                 useEslintrc: false
@@ -318,7 +317,7 @@ module.exports = function webpackConfig(webpackEnv) {
                 compact: false,
                 presets: [
                   [
-                    require.resolve('babel-preset-react-app/dependencies'),
+                    require.resolve('babel-preset-react-dev/dependencies'),
                     { helpers: true }
                   ]
                 ],
@@ -330,9 +329,9 @@ module.exports = function webpackConfig(webpackEnv) {
                     : isEnvDevelopment && 'development',
                   [
                     'babel-plugin-named-asset-import',
-                    'babel-preset-react-app',
-                    'react-dev-utils',
-                    'react-scripts'
+                    'babel-preset-react-dev',
+                    'react-dev-lambda',
+                    'react-app-script'
                   ]
                 ),
                 sourceMaps: false
@@ -500,8 +499,8 @@ module.exports = function webpackConfig(webpackEnv) {
       fs: 'empty',
       net: 'empty',
       tls: 'empty',
-      child_process: 'empty',
+      child_process: 'empty'
     },
-    performance: false,
+    performance: false
   };
 };
