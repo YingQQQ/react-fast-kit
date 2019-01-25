@@ -28,8 +28,7 @@ module.exports = function create(api, opts = {}, env) {
   const isFlowEnabled = validateBoolOption('flow', opts.flow, true);
   const isTypeScriptEnabled = validateBoolOption(
     'typescript',
-    opts.typescript,
-    true
+    opts.typescript,true
   );
 
   const areHelpersEnabled = validateBoolOption('helpers', opts.helpers, true);
@@ -141,7 +140,7 @@ module.exports = function create(api, opts = {}, env) {
       // import语法
       require('@babel/plugin-syntax-dynamic-import').default,
       isEnvTest && require('babel-plugin-dynamic-import-node')
-    ],
+    ].filter(Boolean),
     overrides: [
       isFlowEnabled && {
         exclude: /\.tsx?$/,
