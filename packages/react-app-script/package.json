@@ -1,6 +1,6 @@
 {
   "name": "react-app-script",
-  "version": "1.1.8",
+  "version": "1.1.9",
   "description": "react development base kit",
   "author": "Y",
   "bin": {
@@ -22,7 +22,7 @@
     "babel-jest": "23.6.0",
     "babel-loader": "8.0.5",
     "babel-plugin-named-asset-import": "^0.3.0",
-    "babel-preset-react-dev": "^1.1.8",
+    "babel-preset-react-dev": "^1.1.9",
     "bfj": "^6.1.1",
     "case-sensitive-paths-webpack-plugin": "^2.1.2",
     "chalk": "^2.4.2",
