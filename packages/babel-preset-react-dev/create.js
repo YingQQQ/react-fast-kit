@@ -28,7 +28,8 @@ module.exports = function create(api, opts = {}, env) {
   const isFlowEnabled = validateBoolOption('flow', opts.flow, true);
   const isTypeScriptEnabled = validateBoolOption(
     'typescript',
-    opts.typescript.true
+    opts.typescript,
+    true
   );
 
   const areHelpersEnabled = validateBoolOption('helpers', opts.helpers, true);
