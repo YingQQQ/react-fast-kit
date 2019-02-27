@@ -61,6 +61,8 @@ const resolveModule = (resolveFn, filePath) => {
   resolveFn(`${filePath}.js`);
 };
 
+const resolveOwn = relativePath => path.resolve(__dirname, '..', relativePath);
+
 
 module.exports = {
   appPath: resolveApp('.'),
@@ -76,6 +78,11 @@ module.exports = {
   appHtml: resolveApp('public/index.html'),
   publicUrl: getPublicUrl(resolveApp('package.json')),
   appPublic: resolveApp('public'),
+  //
+  ownPath: resolveOwn('.'),
+  ownNodeModules: resolveOwn('node_modules'),
+  appTypeDeclarations: resolveApp('src/react-app-env.d.ts'),
+  ownTypeDeclarations: resolveOwn('lib/react-app.d.ts'),
 } 
 
 module.exports.moduleFileExtensions = moduleFileExtensions;
