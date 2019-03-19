@@ -1,14 +1,37 @@
 'use strict';
 
 // Inspired by https://github.com/airbnb/javascript but less opinionated.
-var restrictedGlobals = require('confusing-browser-globals');
+
+// We use eslint-loader so even warnings are very visible.
+// This is why we only use "WARNING" level for potential errors,
+// and we don't use "ERROR" level at all.
+
+// In the future, we might create a separate list of rules for production.
+// It would probably be more strict.
+
+// The ESLint browser environment defines all browser globals as valid,
+// even though most people don't know some of them exist (e.g. `name` or `status`).
+// This is dangerous as it hides accidentally undefined variables.
+// We blacklist the globals that we deem potentially confusing.
+// To use them, explicitly reference them, e.g. `window.name` or `window.status`.
+const restrictedGlobals = require('confusing-browser-globals');
+
+// The following is copied from `react-scripts/config/paths.js`.
+const path = require('path');
+const fs = require('fs');
+// Make sure any symlinks in the project folder are resolved:
+// https://github.com/facebook/create-react-app/issues/637
+const appDirectory = fs.realpathSync(process.cwd());
+const resolveApp = relativePath => path.resolve(appDirectory, relativePath);
+const projectRootPath = resolveApp('.');
+const tsConfigPath = resolveApp('tsconfig.json');
 
 module.exports = {
   root: true,
 
   parser: 'babel-eslint',
 
-  plugins: ['import', 'flowtype', 'jsx-a11y', 'react'],
+  plugins: ['import', 'flowtype', 'jsx-a11y', 'react', 'react-hooks'],
 
   env: {
     browser: true,
@@ -32,6 +55,45 @@ module.exports = {
     },
   },
 
+  overrides: {
+    files: ['**/*.ts', '**/*.tsx'],
+    parser: '@typescript-eslint/parser',
+    parserOptions: {
+      ecmaVersion: 2018,
+      sourceType: 'module',
+      ecmaFeatures: {
+        jsx: true,
+      },
+
+      // typescript-eslint specific options
+      project: tsConfigPath,
+      tsconfigRootDir: projectRootPath,
+      warnOnUnsupportedTypeScriptVersion: true,
+    },
+    plugins: ['@typescript-eslint'],
+    rules: {
+      // These ESLint rules are known to cause issues with typescript-eslint
+      // See https://github.com/typescript-eslint/typescript-eslint/blob/master/packages/eslint-plugin/src/configs/recommended.json
+      camelcase: 'off',
+      indent: 'off',
+      'no-array-constructor': 'off',
+      'no-unused-vars': 'off',
+
+      '@typescript-eslint/no-angle-bracket-type-assertion': 'warn',
+      '@typescript-eslint/no-array-constructor': 'warn',
+      '@typescript-eslint/no-namespace': 'error',
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        {
+          args: 'none',
+          ignoreRestSiblings: true,
+        },
+      ],
+    },
+  },
+
+  // NOTE: When adding rules here, you need to make sure they are compatible with
+  // `typescript-eslint`, as some rules such as `no-array-constructor` aren't compatible.
   rules: {
     // http://eslint.org/docs/rules/
     'array-callback-return': 'warn',
@@ -141,6 +203,7 @@ module.exports = {
     ],
     'no-with': 'warn',
     'no-whitespace-before-property': 'warn',
+    'react-hooks/exhaustive-deps': 'warn',
     'require-yield': 'warn',
     'rest-spread-spacing': ['warn', 'never'],
     strict: ['warn', 'never'],
@@ -185,8 +248,10 @@ module.exports = {
     'react/jsx-uses-react': 'warn',
     'react/jsx-uses-vars': 'warn',
     'react/no-danger-with-children': 'warn',
-
-    // See https://github.com/facebook/create-react-app/issues/5204
+    // Disabled because of undesirable warnings
+    // See https://github.com/facebook/create-react-app/issues/5204 for
+    // blockers until its re-enabled
+    // 'react/no-deprecated': 'warn',
     'react/no-direct-mutation-state': 'warn',
     'react/no-is-mounted': 'warn',
     'react/no-typos': 'error',
@@ -218,6 +283,9 @@ module.exports = {
     'jsx-a11y/role-has-required-aria-props': 'warn',
     'jsx-a11y/role-supports-aria-props': 'warn',
     'jsx-a11y/scope': 'warn',
+
+    // https://github.com/facebook/react/tree/master/packages/eslint-plugin-react-hooks
+    'react-hooks/rules-of-hooks': 'error',
 
     // https://github.com/gajus/eslint-plugin-flowtype
     'flowtype/define-flow-type': 'warn',

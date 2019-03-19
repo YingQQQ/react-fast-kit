@@ -114,7 +114,7 @@ module.exports = function init(
 
   // Setup the eslint config
   appPackage.eslintConfig = {
-    extends: 'react-app'
+    extends: 'react-dev'
   };
 
   appPackage.browserslist = defaultBrowsers;
