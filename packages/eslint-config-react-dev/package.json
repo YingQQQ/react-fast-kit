@@ -1,6 +1,6 @@
 {
   "name": "eslint-config-react-dev",
-  "version": "1.0.1",
+  "version": "1.2.2",
   "description": "eslint react config",
   "main": "index.js",
   "author": "Y",
